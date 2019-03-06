@@ -107,21 +107,63 @@
       <version>0.0.35</version>
     </dependency>
 
-
     <dependency>
       <groupId>org.webbitserver</groupId>
       <artifactId>webbit</artifactId>
       <version>0.1.16</version>
     </dependency>
 
-
-
-
       <dependency>
           <groupId>com.pusher</groupId>
           <artifactId>pusher-java-client</artifactId>
           <version>1.8.0</version>
       </dependency>
+
+
+    <!-- https://mvnrepository.com/artifact/org.tinfour/Tinfour -->
+    <dependency>
+      <groupId>org.tinfour</groupId>
+      <artifactId>TinfourCore</artifactId>
+      <version>2.0</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.tinfour</groupId>
+      <artifactId>TinfourDemo</artifactId>
+      <version>2.0</version>
+    </dependency>
+
+
+    <!-- Hipster Heuristics libary -->
+
+    <dependency>
+      <groupId>es.usc.citius.hipster</groupId>
+      <artifactId>hipster-core</artifactId>
+      <version>1.0.1</version>
+    </dependency>
+    <dependency>
+      <groupId>es.usc.citius.hipster</groupId>
+      <artifactId>hipster-third-party-graphs</artifactId>
+      <version>1.0.1</version>
+    </dependency>
+    <dependency>
+      <groupId>com.google.guava</groupId>
+      <artifactId>guava</artifactId>
+      <version>18.0</version>
+    </dependency>
+    <dependency>
+      <groupId>com.intellij</groupId>
+      <artifactId>forms_rt</artifactId>
+      <version>7.0.3</version>
+    </dependency>
+
+    <dependency>
+      <groupId>de.alsclo</groupId>
+      <artifactId>voronoi-java</artifactId>
+      <version>1.0</version>
+    </dependency>
+
+
 
 
 

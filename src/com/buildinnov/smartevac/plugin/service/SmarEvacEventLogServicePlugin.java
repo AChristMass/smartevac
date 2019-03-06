@@ -34,8 +34,16 @@ import org.bimserver.plugins.PluginContext;
 import org.bimserver.plugins.services.AbstractAddExtendedDataService;
 import org.bimserver.plugins.services.BimServerClientInterface;
 
+
 import com.google.common.base.Charsets;
 import org.bimserver.shared.exceptions.PluginException;
+import org.tinfour.common.Vertex;
+import org.tinfour.demo.utils.TestVertices;
+import org.tinfour.demo.utils.TinRenderingUtility;
+import org.tinfour.standard.IncrementalTin;
+
+import java.io.File;
+import java.util.List;
 
 public class SmarEvacEventLogServicePlugin extends AbstractAddExtendedDataService {
 	private static final String NAMESPACE = "http://bimserver.org/eventlog";
@@ -66,33 +74,13 @@ public class SmarEvacEventLogServicePlugin extends AbstractAddExtendedDataServic
 
 		
 	}
-	
 
-	public ObjectDefinition getUserSettingsDefinition() {
-		ObjectDefinition settings = StoreFactory.eINSTANCE.createObjectDefinition();
-		
-		PrimitiveDefinition stringType = StoreFactory.eINSTANCE.createPrimitiveDefinition();
-		stringType.setType(PrimitiveEnum.STRING);
-		
-		StringType nlsfbDefaultValue = StoreFactory.eINSTANCE.createStringType();
-		nlsfbDefaultValue.setValue("[ArchiCADProperties]Layer");
 
-		StringType materialDefaultValue = StoreFactory.eINSTANCE.createStringType();
-		materialDefaultValue.setValue("[ArchiCADProperties]Building Material / Composite / Profile / Fill");
-		
-		ParameterDefinition nlsfb = StoreFactory.eINSTANCE.createParameterDefinition();
-		nlsfb.setName("nlsfb");
-		nlsfb.setDefaultValue(nlsfbDefaultValue);
-		nlsfb.setType(stringType);
-
-		ParameterDefinition material = StoreFactory.eINSTANCE.createParameterDefinition();
-		material.setName("material");
-		material.setDefaultValue(materialDefaultValue);
-		material.setType(stringType);
-		
-		settings.getParameters().add(nlsfb);
-		settings.getParameters().add(material);
-		
-		return settings;
+	public static void main(String []args) throws Exception {
+		IncrementalTin tin = new IncrementalTin(1.0);
+		List<Vertex> vertexList = TestVertices.makeRandomVertices(100, 0);
+		tin.add(vertexList, null);
+		TinRenderingUtility.drawTin(tin, 500, 500, new File("tin.png"));
 	}
+
 }

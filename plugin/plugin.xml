@@ -6,4 +6,15 @@
 		<description>SmarEvacEventLogServiceService</description>
 		<name>SmarEvacEventLog</name>
 	</JavaPlugin>
+
+
+	<JavaPlugin>
+		<interfaceClass>org.bimserver.plugins.services.ServicePlugin</interfaceClass>
+		<implementationClass>com.buildinnov.smartevac.plugin.evacplans_generation.services.EvacuationPlanGenerator</implementationClass>
+		<description>EvacuationPlanGenerator</description>
+		<name>EvacuationPlanGenerator</name>
+	</JavaPlugin>
+
+
+
 </PluginDescriptor>
