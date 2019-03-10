@@ -1,16 +1,24 @@
 package com.buildinnov.smartevac.plugin.evacplans_generation.services;
 
+import com.buildinnov.smartevac.plugin.evacplans_generation.services.models.InterestPoint;
+import es.usc.citius.hipster.graph.GraphBuilder;
+import es.usc.citius.hipster.graph.HipsterDirectedGraph;
+import org.apache.commons.logging.impl.SLF4JLog;
 import org.bimserver.emf.IfcModelInterface;
 import org.bimserver.emf.OfflineGeometryGenerator;
 import org.bimserver.models.ifc2x3tc1.*;
 import org.bimserver.plugins.services.BimServerClientInterface;
 import org.bimserver.plugins.services.Geometry;
+import org.bimserver.shared.IfcDoc;
 import org.eclipse.emf.common.util.EList;
+import org.eclipse.emf.common.util.TreeIterator;
+import org.eclipse.emf.ecore.EObject;
 import org.tinfour.common.*;
 import org.tinfour.demo.utils.TestPalette;
 
 import org.tinfour.demo.utils.TinRenderingUtility;
 import org.tinfour.standard.IncrementalTin;
+import org.tinfour.utils.TriangleCollector;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
@@ -24,9 +32,7 @@ import java.io.PrintWriter;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.DoubleBuffer;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.Iterator;
+import java.util.*;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -106,102 +112,191 @@ public class VertexExtractorIFC2x3
     }
 
     public static void processLevels(IfcModelInterface model) {
+        FileWriter writer = null;
+        try {
+            writer = new FileWriter("D:\\workplace\\IFC_levels_processing_log.txt",true);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        PrintWriter print_line = new PrintWriter(writer);
+        List<String> samplesGids = new ArrayList<>();
+        samplesGids.add("1hS0l0psT3ZP0d5DO1Dqby");
+        samplesGids.add("1hS0l0psT3ZP0d5DO1Dqbu");
+        samplesGids.add("1hS0l0psT3ZP0d5DO1Dqc5");
+        samplesGids.add("1hS0l0psT3ZP0d5DO1Dqbw");
+        samplesGids.add("1hS0l0psT3ZP0d5DO1Dqbv");
+        samplesGids.add("1hS0l0psT3ZP0d5DO1Dqbx");
+        samplesGids.add("1hS0l0psT3ZP0d5DO1DqcM");
+        samplesGids.add("1hS0l0psT3ZP0d5DO1DqcG");
+        samplesGids.add("1hS0l0psT3ZP0d5DO1DqcJ");
+        samplesGids.add("1hS0l0psT3ZP0d5DO1DqcT");
+
+
         List<IfcBuildingStorey> buildingStoreys = model.getAll(IfcBuildingStorey.class);
-        System.out.println("Storey available");
         IfcBuildingStorey storey;
         List<Vertex> spacesVertices= new ArrayList<Vertex>();
         List<Vertex> wallsVertices;
         IfcSpace space;
         List<String> gIds = new ArrayList<>();
-        List<Integer> xes;
-        List<Integer> yes;
 
+        List<Vertex> spaceCentroids;
+        List<IfcDoor> spaceDoors ;
 
         int k=0;
-        FileWriter writer = null;
-        try {
-            writer = new FileWriter("D:\\IFC_log.txt",true);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        PrintWriter print_line = new PrintWriter(writer);
-        int noVerticesSpaces = 0;
         int spacesCount = 0;
         int goodSpaces = 0;
-
-
-        //print_line.printf("Spaces count :  %d" + spacesCount+"\n");
-
         for(int i=0;i<buildingStoreys.size();i++){
             System.out.println("Story : Name :"+buildingStoreys.get(i).getName()+" GID : "+buildingStoreys.get(i).getGlobalId());
+            print_line.printf("\n\n\nStory : Name :"+buildingStoreys.get(i).getName()+" GID : "+buildingStoreys.get(i).getGlobalId());
             storey = buildingStoreys.get(i);
             EList<IfcRelDecomposes> relAggregates = storey.getIsDecomposedBy();
             for(int j=0;j<relAggregates.size();j++){
                 for(IfcObjectDefinition ifcObjectDefinition : relAggregates.get(j).getRelatedObjects()){
-                    //System.out.println("[DecomposedBy]" +ifcObjectDefinition.toString());
                     gIds.add(ifcObjectDefinition.getGlobalId());
-                    if(ifcObjectDefinition instanceof IfcSpace){
+                    if(ifcObjectDefinition instanceof IfcSpace && samplesGids.contains(ifcObjectDefinition.getGlobalId()) ){
                         spacesCount++;
                         space = (IfcSpace) ifcObjectDefinition;
-                        System.out.println("[DecomposedBy] space vertices generated   : Name "+space.getName()+"  GID : "+space.getGlobalId());
-                        getSpaceDoors(space);
-                        spacesVertices = processPlacement(space.getObjectPlacement(),space.getRepresentation());
+                        spaceCentroids = processSpace(space,print_line);
+                        spaceDoors = processSpaceDoors(space,print_line);
+                        //getting space neibourhood relationship with other spaces
+                        //from gotten doors we find the neighbour space by testing if the door is a part of it's boundaries
+                        //list of neighbours
+                        //getSpaceNeighbours = getSpaceNeighbours(space,spaceDoors);
 
 
-                        xes = new ArrayList<>();
-                        yes = new ArrayList<>();
-                        for(Vertex vertex : spacesVertices){
-                            xes.add((int) Math.round(vertex.getX()));
-                            yes.add((int) Math.round(vertex.getY()));
-
-                        }
-
-                        //wallsVertices = getSpaceWallsVertices(space);
-
-                            //&& wallsVertices!=null && wallsVertices.size()>0
-                            if(spacesVertices.size()>0 ) {
-                                System.out.println("drawing the polygon");
-                                print_line.printf("Wall vertices : Space Name %s Space GID %s\n",space.getName(),space.getGlobalId());
-                                try {
-                                    drawPolygon(xes,yes,"D:\\"+storey.getName() + "_" + space.getName() + "_POLY.png");
-                                } catch (IOException e) {
-                                    e.printStackTrace();
-                                }
-                                goodSpaces++;
-                                //System.out.println("Creating TIN");
-                               /* IncrementalTin tin = new IncrementalTin(1.0);
-                                tin.add(spacesVertices, null);
-
-                                ArrayList<IConstraint> constraintsList = new ArrayList<>();
-                                IConstraint constraint = new LinearConstraint();
-                                constraintsList.add(constraint);
-                                for(Vertex vertex : wallsVertices)
-                                    constraint.add(vertex);
-                                tin.addConstraints(constraintsList,false);
-                                //System.out.println("TIN Added");
-                                try {
-                                    System.out.println("drawing the TIN");
-                                    TinRenderingUtility.drawTin(tin, 500, 500, new File("D:\\TIN_" + storey.getName() + "_" + space.getName() + "_C_NC.png"));
-                                } catch (IOException e) {
-                                    e.printStackTrace();
-                                }
-                                */
+                        //find also if the space contains a stair to access to other level
+                        //if it does so it will be contained in the two spaces,  we have to get the other space, it's building storey (in wich level it is)
 
 
-                            }else{
-                                //if(wallsVertices ==null || wallsVertices.size() ==0)
-                                 //   print_line.printf("Wall vertices : Space Name %s Space GID %s\n",space.getName(),space.getGlobalId());
+                        //A point if interest could be : a space (compound point of interest), a door,
+                        // a centroid of TIN triangle of a space or a stair
 
-                                noVerticesSpaces++;
-                                print_line.printf("Space Name %s Space GID %s\n",space.getName(),space.getGlobalId());
-                            }
-                    }
                 }
-                print_line.printf("\n\nSpaces with all information   : " + goodSpaces+"/"+spacesCount+"\n");
-                print_line.printf("Spaces no vertices count " + noVerticesSpaces+"\n");
-                print_line.close();
             }
         }
+    }
+        print_line.printf("\n\nSpaces with all information   : " + goodSpaces+"/"+spacesCount+"\n");
+        print_line.close();
+
+    }
+
+    public static List<IfcSpace> getSpaceNeighbours(IfcSpace space,List<IfcDoor> doors,List<IfcSpace> spacesList){
+        List<IfcSpace> spaces = new ArrayList<>();
+        for(IfcSpace ifcSpace:spacesList){
+
+        }
+        return spaces;
+    }
+
+    public static List<Vertex>  processSpace(IfcSpace space,PrintWriter print_line)
+    {
+        List<Vertex> spaceCentroidsVertices = new ArrayList<Vertex>();
+        print_line.printf("\nSpace Name :  "+space.getName()+"   Space Global Id : "+space.getGlobalId());
+        print_line.printf("\nExtracting space\'s vertices  ");
+        List<Vertex> spaceVertices = processPlacement(space.getObjectPlacement(), space.getRepresentation());
+        if(spaceVertices.size()>0){
+            Rectangle2D spaceBounds= new Rectangle2D.Double();
+            print_line.printf("\nShowing space vertices");
+            for(Vertex vertex:spaceVertices) {
+                print_line.printf("\nSpace Vertex  : (X,Y) :   ( " + vertex.getX() + ", " + vertex.getY() + " )");
+                spaceBounds.add(vertex.getX(),vertex.getY());
+            }
+            print_line.printf("\nCreating  TIN ");
+            IncrementalTin tin = new IncrementalTin();
+            tin.add(spaceVertices, null);
+            print_line.printf("\nTIN Created");
+            try {
+                print_line.printf("\nDrawing TIN");
+                TinRenderingUtility.drawTin(tin, 500, 500, new File("D:\\workplace\\"+space.getName()+"_"+space.getGlobalId()+"_TIN.png"));
+            } catch (IOException e) {
+                print_line.printf("\nException occured when drawing tin");
+                print_line.printf(e.getMessage());
+                print_line.printf("\n\n\n");
+            }
+            print_line.printf("\nCreating local navigation network // Cleaning up the TIN");
+            TrianglesWrapper  wrapper = new TrianglesWrapper();
+            TriangleCollector.visitSimpleTriangles(tin,wrapper);
+            List<Vertex> centroids = wrapper.getTrianglesCentroid();
+            Rectangle2D bounds = tin.getBounds();
+            print_line.printf("\nCleaning up the TIN (Removing Centroids ouside geomtery bounds)");
+            List<Vertex> cleanCentroids = new ArrayList<>();
+            for(Vertex vertex : centroids)
+                if(!  spaceBounds.contains(vertex.getX(),vertex.getY()))
+                        print_line.printf("\nCentroids outside geometry  (  "+ vertex.getX()+"," + vertex.getY() + ")" );
+                    else{
+                        print_line.printf("\nCentroids inside geometry  (  "+ vertex.getX()+"," + vertex.getY() + ")" );
+                        cleanCentroids.add(vertex);
+                        spaceCentroidsVertices.add(vertex);
+                    }
+        }
+
+        return spaceCentroidsVertices;
+    }
+
+
+
+
+    public static List<IfcDoor> processSpaceDoors(IfcSpace space,PrintWriter print_line){
+        print_line.printf( "\n\n===> IfcSpace Name  : "+space.getName()+"   Global Id : "+space.getGlobalId() );
+        List<IfcRelSpaceBoundary> listBounds = space.getBoundedBy();
+        List<IfcDoor> doorsList = new ArrayList<>();
+        IfcLocalPlacement ifcLocalPlacement;
+        IfcAxis2Placement3D placement3D;
+        int ifcDoorsCount = 0;
+        for(IfcRelSpaceBoundary boundary : listBounds){
+            if(boundary.getRelatedBuildingElement() != null  && boundary.getRelatedBuildingElement() instanceof IfcDoor) {
+                System.out.println("=>Its a door");
+                ifcDoorsCount++;
+                doorsList.add((IfcDoor) boundary.getRelatedBuildingElement() );
+                if( ((IfcDoor)boundary.getRelatedBuildingElement()).getObjectPlacement() != null  &&   ((IfcDoor)boundary.getRelatedBuildingElement()).getObjectPlacement()  instanceof IfcLocalPlacement){
+                    ifcLocalPlacement =  (IfcLocalPlacement)   (  ((IfcDoor)boundary.getRelatedBuildingElement()).getObjectPlacement());
+                    System.out.println(ifcLocalPlacement.getRelativePlacement().toString());
+                    placement3D = (IfcAxis2Placement3D)ifcLocalPlacement.getRelativePlacement();
+                    System.out.println("Coordinates "+  placement3D.getLocation().getCoordinates().get(0)+"  , "+placement3D.getLocation().getCoordinates().get(1));
+                }
+
+                //((IfcDoor)boundary.getRelatedBuildingElement()).getObjectPlacement().getPlacesObject()
+        }
+        }
+        print_line.printf("\n===> IfcDoors Count  :  "+ifcDoorsCount);
+        return doorsList;
+    }
+
+
+    public static HipsterDirectedGraph<InterestPoint,IndoorDistance> createSpaceNavigationGraph(List<IfcDoor> doors,List<Vertex> centroids) {
+
+        //List<InterestPoint> CentroidsInterestPoints = new ArrayList<>()
+
+        for(IfcDoor ifcDoor : doors){
+
+        }
+        for(Vertex vertex :  centroids){
+           // CentroidsInterestPoints.add(new InterestPoint(vertex,false));
+        }
+
+        GraphBuilder<InterestPoint, IndoorDistance> graphBuilder = GraphBuilder.<InterestPoint, IndoorDistance>create();
+        Double verticesDistance;
+        for(int i=1;i<centroids.size();i++){
+            verticesDistance = centroids.get(i-1).getDistance(centroids.get(i));
+            //graphBuilder.connect(new InterestPoint(centroids.get(i-1),false)).to(new InterestPoint(centroids.get(i),false)).withEdge(verticesDistance);
+        }
+        return graphBuilder.createDirectedGraph();
+    }
+
+
+    public static HipsterDirectedGraph<InterestPoint,Double> createSpaceNavigationGraphUsingTIN(IncrementalTin tin){
+
+        GraphBuilder<InterestPoint, Double> graphBuilder = GraphBuilder.<InterestPoint, Double>create();
+        TrianglesWrapper wrapper= new TrianglesWrapper();
+        TriangleCollector.visitSimpleTriangles(tin,wrapper);
+        List<Vertex> spaceCentroids = wrapper.getTrianglesCentroid();
+        Double verticesDistance;
+        for(int i=1;i<spaceCentroids.size();i++){
+            verticesDistance = spaceCentroids.get(i-1).getDistance(spaceCentroids.get(i));
+            graphBuilder.connect(new InterestPoint(spaceCentroids.get(i-1),false)).to(new InterestPoint(spaceCentroids.get(i),false)).withEdge(verticesDistance);
+        }
+        return graphBuilder.createDirectedGraph();
+
     }
 
 
@@ -237,52 +332,6 @@ public class VertexExtractorIFC2x3
             processPlacement(door.getObjectPlacement(),door.getRepresentation());
     }
 
-
-
-    public static void processSpace(IfcModelInterface model)
-    {
-        List<Vertex> SpaceVertices = new ArrayList<>();
-        List<de.alsclo.voronoi.graph.Point> spacePoints = new ArrayList<>();
-
-
-        List<Vertex> wallsVertices;
-        List<IConstraint> constraintsList;
-        LinearConstraint constraint;
-        for(IfcSpace space : model.getAll(IfcSpace.class))
-        {
-            //if(space.getGlobalId().equals("0PeKSAvI59PfDaeCq6ElAH")) {
-            System.out.println("got the space : "+"Name : "+space.getName()+" Global Id : "+space.getGlobalId());
-            SpaceVertices = processPlacement(space.getObjectPlacement(), space.getRepresentation());
-            /*
-            wallsVertices = getSpaceWallsVertices(space);
-            constraintsList = new ArrayList<>();
-            constraint = new LinearConstraint();
-            constraintsList.add(constraint);
-            System.out.println("The size of walls's vertices list :"+wallsVertices.size());
-            for(Vertex vertex : wallsVertices){
-                constraint.add(vertex);
-                System.out.println("Walls Vertex : (x , y)  = (" + vertex.x + ", "+vertex.y + ")" );
-            }
-            */
-            //System.out.println("Creating TIN");
-            //IncrementalTin tin = new IncrementalTin(1.0);
-            //tin.add(wallsVertices, null);
-            //System.out.println("TIN Added");
-            //tin.addConstraints(constraintsList,false);
-            //System.out.println("Constraints Added");
-            /*
-                try {
-                    System.out.println("drawing the TIN");
-                    TinRenderingUtility.drawTin(tin, 500, 500, new File("D:\\wall_tin_with_cons_.png"));
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-                */
-
-
-            //}
-        }
-    }
 
 
     public static  List<Vertex>  getWallVertices(IfcWall ifcWall){
@@ -338,7 +387,7 @@ public class VertexExtractorIFC2x3
 
         for(IfcRelSpaceBoundary boundary : space.getBoundedBy()){
             //if(boundary.getInternalOrExternalBoundary() == IfcInternalOrExternalEnum.INTERNAL) {
-                if (boundary.getRelatedBuildingElement() instanceof IfcWall) {
+                if (boundary.getRelatedBuildingElement() instanceof IfcWall || boundary.getRelatedBuildingElement() instanceof IfcWallStandardCase) {
                     IfcWall wall = (IfcWall) boundary.getRelatedBuildingElement();
                     //System.out.println("its a wall");
                     vertices.addAll(getWallVertices((IfcWall) boundary.getRelatedBuildingElement()));
@@ -349,7 +398,7 @@ public class VertexExtractorIFC2x3
         }
         for(IfcRelContainedInSpatialStructure  contains : space.getContainsElements()){
             for(IfcProduct ifcProduct: contains.getRelatedElements())
-                if(contains instanceof IfcWall){
+                if(contains instanceof IfcWall || contains instanceof IfcWallStandardCase){
                     System.out.println("its a wall in contains");
                     vertices.addAll(getWallVertices((IfcWall) contains));
                 }
@@ -365,8 +414,6 @@ public class VertexExtractorIFC2x3
         }
         return null;
     }
-
-
 
 
 

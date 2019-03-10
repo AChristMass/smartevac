@@ -73,8 +73,8 @@ public class EvacuationPlanGenerator extends AbstractAddExtendedDataService {
         if( project.getSchema().equals("ifc2x3tc1")){
             System.out.println("Project schema : IFC2x3tc1");
             //VertexExtractorIFC2x3.processSpace(model);
-            //VertexExtractorIFC2x3.processLevels(model);
-            VertexExtractorIFC2x3Tests.testManySpaces(model);
+            VertexExtractorIFC2x3.processLevels(model);
+            //VertexExtractorIFC2x3Tests.testManySpaces(model);
 
         }
         else {

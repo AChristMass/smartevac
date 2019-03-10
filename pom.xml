@@ -24,27 +24,6 @@
       <name>Bouzid MEDJDOUB</name>
       <email>cb_medjdoub@esi.dz</email>
     </developer>
-
-    <developer>
-      <name>NAIT BELAID Mohand</name>
-      <email>dm_nait_belaid@esi.dz</email>
-    </developer>
-
-    <developer>
-      <name>Abdeljalil BOUTEBEL</name>
-      <email>boutebel.abdeldjalil@gmail.com</email>
-    </developer>
-
-    <developer>
-      <name>Amira KAIDI</name>
-      <email>amirakaidi08@gmail.com</email>
-    </developer>
-
-
-    <developer>
-      <name>Mouard HAFFAF</name>
-      <email>haffaf.mourad@hotmail.com</email>
-    </developer>
   </developers>
 
   <scm>
@@ -162,6 +141,14 @@
       <artifactId>voronoi-java</artifactId>
       <version>1.0</version>
     </dependency>
+
+
+    <dependency>
+      <groupId>org.orbisgis</groupId>
+      <artifactId>jdelaunay</artifactId>
+      <version>0.5.2</version>
+    </dependency>
+
 
 
 

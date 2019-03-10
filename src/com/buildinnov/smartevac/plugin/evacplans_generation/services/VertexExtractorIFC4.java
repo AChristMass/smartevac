@@ -229,7 +229,8 @@ public class VertexExtractorIFC4
         }
         for(IfcRelContainedInSpatialStructure  contains : space.getContainsElements()){
             for(IfcProduct ifcProduct: contains.getRelatedElements())
-                if(contains instanceof IfcWall){
+                if(contains instanceof IfcWall || contains instanceof IfcWallStandardCase
+                ){
                     System.out.println("its a wall in contains");
                     vertices.addAll(getWallVertices((IfcWall) contains));
                 }

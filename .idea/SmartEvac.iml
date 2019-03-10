@@ -145,5 +145,8 @@
     <orderEntry type="library" name="Maven: com.jgoodies:forms:1.1-preview" level="project" />
     <orderEntry type="library" name="Maven: jdom:jdom:1.0" level="project" />
     <orderEntry type="library" name="Maven: de.alsclo:voronoi-java:1.0" level="project" />
+    <orderEntry type="library" name="Maven: org.orbisgis:jdelaunay:0.5.2" level="project" />
+    <orderEntry type="library" name="Maven: com.vividsolutions:jts:1.12" level="project" />
+    <orderEntry type="library" name="Maven: xerces:xercesImpl:2.4.0" level="project" />
   </component>
 </module>

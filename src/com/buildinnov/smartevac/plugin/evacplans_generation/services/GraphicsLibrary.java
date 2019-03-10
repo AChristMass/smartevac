@@ -5,6 +5,8 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 public class GraphicsLibrary {
@@ -34,7 +36,7 @@ public class GraphicsLibrary {
         poly.getBounds();
         g2d.setPaint(Color.DARK_GRAY);
         g2d.drawPolygon(poly);
-        //g2d.fillPolygon(xPoly, yPoly, xPoly.length);
+        g2d.fillPolygon(xPoly, yPoly, xPoly.length);
         //g2d.drawPolygon(xPoly, yPoly, xPoly.length);
         g2d.setStroke(bs);
         //g2d.drawPolyline(xPoly, yPoly, xPoly.length);
@@ -50,6 +52,16 @@ public class GraphicsLibrary {
 
     public static void drawPolyLine(List<Integer> pointArrayX, List<Integer> pointArrayY, String filepath) throws IOException {
 
+
+        /////Getting the min
+        Integer minX = Collections.min(pointArrayX);
+        Integer minY = Collections.min(pointArrayY);
+        if(minX < 0)
+            for(int i=0;i<pointArrayX.size();i++)
+                pointArrayX.set(i,pointArrayX.get(i) - minX + 10);
+        if(minY < 0)
+            for(int i=0;i<pointArrayX.size();i++)
+                pointArrayY.set(i,pointArrayY.get(i) - minY + 10);
 
         BufferedImage image = new BufferedImage(9000,9000,BufferedImage.TYPE_3BYTE_BGR);
         Graphics2D g2d = image.createGraphics();
