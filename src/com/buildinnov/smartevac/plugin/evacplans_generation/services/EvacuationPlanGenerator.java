@@ -70,10 +70,13 @@ public class EvacuationPlanGenerator extends AbstractAddExtendedDataService {
 
         //System.out.println(walls.get(0).getGeometry().getData().eAllContents());
         //System.out.println("Wall vertices printed");
+        VertexExtractorIFC2x3 vertexExtractorIFC2x3 = new VertexExtractorIFC2x3();
         if( project.getSchema().equals("ifc2x3tc1")){
+            vertexExtractorIFC2x3.processLevels(model);
             System.out.println("Project schema : IFC2x3tc1");
+
             //VertexExtractorIFC2x3.processSpace(model);
-            VertexExtractorIFC2x3.processLevels(model);
+            //VertexExtractorIFC2x3.processLevels(model);
             //VertexExtractorIFC2x3Tests.testManySpaces(model);
 
         }

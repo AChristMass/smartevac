@@ -5,10 +5,10 @@ import org.bimserver.models.ifc4.IfcSpace;
 import java.util.ArrayList;
 import java.util.List;
 
-public class SmartEvacDoor {
+public class SmartEvacDoor  implements SmartEvacElement{
     private String doorGlobalId;
     private String doorName;
-    private List<IfcSpace> associatedSpaces = new ArrayList<>();
+    private List<SmartEvacSpace> associatedSpaces = new ArrayList<>();
 
     public SmartEvacDoor(String doorGlobalId, String doorName) {
         this.doorGlobalId = doorGlobalId;
@@ -31,7 +31,7 @@ public class SmartEvacDoor {
         this.doorName = doorName;
     }
 
-    public List<IfcSpace> getAssociatedSpaces() {
+    public List<SmartEvacSpace> getAssociatedSpaces() {
         return associatedSpaces;
     }
 
