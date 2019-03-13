@@ -594,8 +594,6 @@ public class VertexExtractorIFC2x3
         samplesGids.add("1hS0l0psT3ZP0d5DO1DqcJ");
         samplesGids.add("1hS0l0psT3ZP0d5DO1DqcT");
         */
-
-
         samplesGids.add("1hS0l0psT3ZP0d5DO1DqWd");
         samplesGids.add("1hS0l0psT3ZP0d5DO1Dqbe");
         samplesGids.add("1hS0l0psT3ZP0d5DO1Dqbf");
@@ -624,13 +622,6 @@ public class VertexExtractorIFC2x3
         samplesGids.add("1hS0l0psT3ZP0d5DO1DqXx");
         samplesGids.add("1hS0l0psT3ZP0d5DO1DqWP");
 
-
-
-
-
-
-
-
         List<IfcBuildingStorey> buildingStoreys = model.getAll(IfcBuildingStorey.class);
         IfcBuildingStorey storey;
         List<Vertex> spacesVertices= new ArrayList<Vertex>();
@@ -658,7 +649,8 @@ public class VertexExtractorIFC2x3
         List<InterestPoint>  stairsInterestPoints = new ArrayList<>();
         List<InterestPoint> interestPoints ;
         List<InterestPoint> temp;
-
+        List<String> doneInterestPoints = new ArrayList<>();
+        boolean concatTwoGID;
         int indexO;
         InterestPoint pp;
 
@@ -688,7 +680,7 @@ public class VertexExtractorIFC2x3
                          *
                          * Connecting goten doors and stairs to space
                          *
-                         *
+                         *In
                          * */
 
                         //connecting goten doors to space
@@ -696,7 +688,7 @@ public class VertexExtractorIFC2x3
                              if(alreadyCreatedSmartEvacDoors.containsKey(ifcDoor.getGlobalId()))
                                  smartEvacDoor = alreadyCreatedSmartEvacDoors.get(ifcDoor.getGlobalId());
                              else {
-                                 smartEvacDoor = new SmartEvacDoor(ifcDoor.getGlobalId(), ifcDoor.getName());
+                                 smartEvacDoor = new SmartEvacDoor(ifcDoor.getGlobalId(), space.getName()+":"+ifcDoor.getGlobalId());
                                  alreadyCreatedSmartEvacDoors.put(ifcDoor.getGlobalId(),smartEvacDoor);
 
                              }
@@ -762,23 +754,34 @@ public class VertexExtractorIFC2x3
                             stairsInterestPoints.add(interestPoint);
                             interestPoint.setGlobalId(spaceSmartEvacStairs.get(m).getStairGlobalId());
                         }
+
                         for(int l=0;l<spaceTinInterestPoints.size();l++) {
-                            //connecting centroids
-                            spaceTinOtherInterestPoints = new ArrayList<>();
-                            for (int m = 0; m < spaceTinInterestPoints.size(); m++)
-                                if (l != m) {
-                                    spaceTinOtherInterestPoints.add(spaceTinInterestPoints.get(m));
-                                    //graphBuilder.connect(spaceTinInterestPoints.get(l)).to(spaceTinInterestPoints.get(m)).withEdge(new IndoorDistance(spaceTinInterestPoints.get(l).getVertex(), spaceTinInterestPoints.get(m).getVertex()));
+                            if(!doneInterestPoints.contains(spaceTinInterestPoints.get(l).getGlobalId())) {
+                                //connecting centroids
+                                spaceTinOtherInterestPoints = new ArrayList<>();
+                                for (int m = 0; m < spaceTinInterestPoints.size(); m++) {
+                                    concatTwoGID = doneInterestPoints.contains(spaceTinInterestPoints.get(l).getGlobalId().concat(spaceTinInterestPoints.get(m).getGlobalId()))
+                                            || doneInterestPoints.contains(spaceTinInterestPoints.get(m).getGlobalId().concat(spaceTinInterestPoints.get(l).getGlobalId()));
+                                    if (l != m && !concatTwoGID) {
+                                        doneInterestPoints.add(spaceTinInterestPoints.get(l).getGlobalId().concat(spaceTinInterestPoints.get(m).getGlobalId()));
+                                        spaceTinOtherInterestPoints.add(spaceTinInterestPoints.get(m));
+                                        //graphBuilder.connect(spaceTinInterestPoints.get(l)).to(spaceTinInterestPoints.get(m)).withEdge(new IndoorDistance(spaceTinInterestPoints.get(l).getVertex(), spaceTinInterestPoints.get(m).getVertex()));
+                                    }
                                 }
 
-                            if(!indoorNavigationNetworkMap.containsKey(spaceTinInterestPoints.get(l).getGlobalId())){
-                                //System.out.println("Centroid  doesn't exist");
-                                indoorNavigationNetworkMap.put(spaceTinInterestPoints.get(l).getGlobalId(),  spaceTinOtherInterestPoints );
-                            }
 
-                            else{
-                                //System.out.println("Centroid already exist");
-                                indoorNavigationNetworkMap.get(spaceTinInterestPoints.get(l).getGlobalId()).addAll(spaceTinOtherInterestPoints);
+
+                                if (!indoorNavigationNetworkMap.containsKey(spaceTinInterestPoints.get(l).getGlobalId())) {
+                                    //System.out.println("Centroid  doesn't exist");
+                                    indoorNavigationNetworkMap.put(spaceTinInterestPoints.get(l).getGlobalId(), spaceTinOtherInterestPoints);
+
+                                } else {
+                                    //System.out.println("Centroid already exist");
+                                    indoorNavigationNetworkMap.get(spaceTinInterestPoints.get(l).getGlobalId()).addAll(spaceTinOtherInterestPoints);
+                                }
+
+                                doneInterestPoints.add(spaceTinInterestPoints.get(l).getGlobalId());
+
                             }
 
 
@@ -965,7 +968,15 @@ public class VertexExtractorIFC2x3
     }
 
 
-    
+    public List<SmartEvacSpace> getSpaceNeighbour(SmartEvacSpace space){
+        List<SmartEvacSpace> smartEvacSpaces = new ArrayList<>();
+        for(SmartEvacDoor door : space.getDoors())
+            for(SmartEvacSpace evacSpace : door.getAssociatedSpaces())
+                if(evacSpace!=space)
+                    smartEvacSpaces.add(evacSpace);
+        return smartEvacSpaces;
+    }
+
 
 
     public static List<IfcSpace> getSpaceNeighbours(IfcSpace space,List<IfcDoor> doors,List<IfcSpace> spacesList){

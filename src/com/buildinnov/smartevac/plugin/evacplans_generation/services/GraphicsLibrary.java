@@ -3,6 +3,7 @@ package com.buildinnov.smartevac.plugin.evacplans_generation.services;
 
 
 import com.buildinnov.smartevac.plugin.evacplans_generation.services.models.InterestPoint;
+import com.buildinnov.smartevac.plugin.evacplans_generation.services.models.SmartEvacDoor;
 import com.mxgraph.layout.hierarchical.mxHierarchicalLayout;
 import com.mxgraph.layout.mxIGraphLayout;
 import com.mxgraph.util.mxCellRenderer;
@@ -177,21 +178,36 @@ public class GraphicsLibrary {
         */
 
 
+        int x;
+        int y;
+
         while(interestPointIterator.hasNext()){
             entry = interestPointIterator.next();
             System.out.println("Entry Type :" +  entry.getValue().getType());
             if(entry.getValue().getType().equals("IfcDoor")){
                 //styleDoor.put(mxConstants.STYLE_FILLCOLOR, "#FF0800");
-                o = graph.insertVertex(graph.getDefaultParent(),entry.getKey(),null,0.0,0.0,10,10,"fillColor=#FF0800") ;
+                o = graph.insertVertex(graph.getDefaultParent(),entry.getKey(), ((SmartEvacDoor)entry.getValue().getAssociatedElement()).getDoorName()  ,0.0,0.0,160,20,"fillColor=#FF0800") ;
             }
-
+            else if(entry.getValue().getType().equals("Centroid")){
+                x= (int) Math.round(entry.getValue().getVertex().getX());
+                y = (int) Math.round(entry.getValue().getVertex().getY());
+                o = graph.insertVertex(graph.getDefaultParent(),entry.getKey(),"("+x+","+y+")",0.0,0.0,80,20,"fillColor=#27AEE3")  ;//(graph.getDefaultParent(),entry.getKey(),entry.getValue().getType(),0,0,40,20);
+            }
             else{
                 //styleDoor.put(mxConstants.STYLE_FILLCOLOR, "#27AEE3");
-                o = graph.insertVertex(graph.getDefaultParent(),entry.getKey(),null,0.0,0.0,10,10,"fillColor=#27AEE3")  ;//(graph.getDefaultParent(),entry.getKey(),entry.getValue().getType(),0,0,40,20);
+                o = graph.insertVertex(graph.getDefaultParent(),entry.getKey(),entry.getValue().getGlobalId(),0.0,0.0,80,20,"fillColor=#27AEE3")  ;//(graph.getDefaultParent(),entry.getKey(),entry.getValue().getType(),0,0,40,20);
             }
             graphVerticesMap.put(entry.getKey(),o);
         }
     }
+
+
+    public void drawDoorsSpacesGraph(){
+
+    }
+
+
+
 
 
 }
