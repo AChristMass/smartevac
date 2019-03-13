@@ -12,6 +12,8 @@ public class IndoorDistance {
     }
 
     public double getDistance(){
+        if(this.start == null  ||  this.end == null)
+            return 10;
         double x = Math.pow(this.end.getX()-this.start.getX(),2);
         double y = Math.pow(this.end.getY()-this.start.getY(),2);
         return (Math.sqrt(  x+y  ));
