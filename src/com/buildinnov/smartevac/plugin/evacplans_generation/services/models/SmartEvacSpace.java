@@ -42,6 +42,11 @@ public class SmartEvacSpace implements SmartEvacElement{
     }
 
     public List<SmartEvacSpace> getNeighbours() {
-        return neighbours;
+        List<SmartEvacSpace> smartEvacSpaces = new ArrayList<>();
+        for(SmartEvacDoor door : this.getDoors())
+            for(SmartEvacSpace evacSpace : door.getAssociatedSpaces())
+                if(evacSpace!=this)
+                    smartEvacSpaces.add(evacSpace);
+        return smartEvacSpaces;
     }
 }

@@ -4,6 +4,7 @@ package com.buildinnov.smartevac.plugin.evacplans_generation.services;
 
 import com.buildinnov.smartevac.plugin.evacplans_generation.services.models.InterestPoint;
 import com.buildinnov.smartevac.plugin.evacplans_generation.services.models.SmartEvacDoor;
+import com.buildinnov.smartevac.plugin.evacplans_generation.services.models.SmartEvacSpace;
 import com.mxgraph.layout.hierarchical.mxHierarchicalLayout;
 import com.mxgraph.layout.mxIGraphLayout;
 import com.mxgraph.util.mxCellRenderer;
@@ -202,8 +203,68 @@ public class GraphicsLibrary {
     }
 
 
-    public void drawDoorsSpacesGraph(){
+    public void drawDoorsSpacesGraph(String filepath, Map<String,SmartEvacSpace> spaces){
+        mxGraph graph = new mxGraph();
+        Object parent = graph.getDefaultParent();
+        // Sets the default vertex style
+        Map<String, Object> style = graph.getStylesheet().getDefaultVertexStyle();
+        style.put(mxConstants.STYLE_GRADIENTCOLOR, "#FFFFFF");
+        style.put(mxConstants.STYLE_ROUNDED, true);
+        style.put(mxConstants.STYLE_SHADOW, true);
+        graph.getModel().beginUpdate();
+        try
+        {
+            this.insertSpacesVertices(graph,spaces);
+            this.insertSpacesEdges(graph,spaces);
+            mxIGraphLayout layout = new mxHierarchicalLayout(graph);
+            layout.execute(parent);
+        }
+        finally
+        {
+            graph.getModel().endUpdate();
+        }
 
+
+        // Creates an image than can be saved using ImageIO
+        BufferedImage image = mxCellRenderer.createBufferedImage(graph, null,
+                1, Color.WHITE, true, null);
+
+
+        File outputfile = new File(filepath + "");
+        try {
+            ImageIO.write(image, "png", outputfile);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+    }
+
+    private void insertSpacesEdges(mxGraph graph, Map<String, SmartEvacSpace> spaces) {
+        //graphVerticesMap = new HashMap<>();
+        Iterator<Map.Entry<String, SmartEvacSpace>> spacesIterator = spaces.entrySet().iterator();
+        Map.Entry<String, SmartEvacSpace> entry;
+        SmartEvacSpace node;
+        Object o;
+        while(spacesIterator.hasNext()) {
+            entry = spacesIterator.next();
+            node = entry.getValue();
+            for(SmartEvacSpace evacSpace : node.getNeighbours())
+                    if(!entry.getKey().equals(evacSpace.getSpaceGlobalId()))
+                        graph.insertEdge(graph.getDefaultParent(),"","",graphVerticesMap.get(entry.getKey()),graphVerticesMap.get(evacSpace.getSpaceGlobalId()));
+        }
+    }
+
+    private void insertSpacesVertices(mxGraph graph,Map<String,SmartEvacSpace> spaces){
+        graphVerticesMap = new HashMap<>();
+        Iterator<Map.Entry<String, SmartEvacSpace>> spacesIterator = spaces.entrySet().iterator();
+        Map.Entry<String, SmartEvacSpace> entry;
+        SmartEvacSpace node;
+        Object o;
+        while(spacesIterator.hasNext()){
+            entry = spacesIterator.next();
+            node = entry.getValue();
+            graphVerticesMap.put(node.getSpaceGlobalId()  ,  graph.insertVertex(graph.getDefaultParent(),node.getSpaceGlobalId(),node.getSpaceName(),0,0,100,20,"fillColor=#00FF23") ) ;
+        }
     }
 
 
