@@ -1,25 +1,16 @@
 package com.buildinnov.smartevac.plugin.evacplans_generation.services;
 import org.bimserver.emf.IfcModelInterface;
-import org.bimserver.emf.OfflineGeometryGenerator;
 import org.bimserver.interfaces.objects.SObjectType;
 import org.bimserver.interfaces.objects.SProject;
 import org.bimserver.models.ifc4.*;
 import org.bimserver.plugins.PluginContext;
-import org.bimserver.plugins.renderengine.RenderEngine;
-import org.bimserver.plugins.renderengine.RenderEngineException;
-import org.bimserver.plugins.renderengine.RenderEngineModel;
-import org.bimserver.plugins.serializers.AbstractGeometrySerializer;
-import org.bimserver.plugins.serializers.ProgressReporter;
 import org.bimserver.plugins.serializers.SerializerException;
 import org.bimserver.plugins.services.AbstractAddExtendedDataService;
 
 import org.bimserver.plugins.services.BimServerClientInterface;
 import org.bimserver.shared.exceptions.PluginException;
-import org.eclipse.emf.ecore.EObject;
 
 
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -74,7 +65,7 @@ public class EvacuationPlanGenerator extends AbstractAddExtendedDataService {
         VertexExtractorIFC4 extractorIFC4 = new VertexExtractorIFC4();
         if( project.getSchema().equals("ifc2x3tc1")){
             //vertexExtractorIFC2x3.processLevels(model);
-            vertexExtractorIFC2x3.processLevelsFull(model);
+            vertexExtractorIFC2x3.processLevelsSpacesGraph(model);
             System.out.println("Project schema : IFC2x3tc1");
             //VertexExtractorIFC2x3.processSpace(model);
             //VertexExtractorIFC2x3.processLevels(model);
