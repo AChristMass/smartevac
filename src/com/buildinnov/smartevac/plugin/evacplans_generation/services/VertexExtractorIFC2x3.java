@@ -7,6 +7,7 @@ import es.usc.citius.hipster.graph.GraphSearchProblem;
 import es.usc.citius.hipster.graph.HipsterDirectedGraph;
 import es.usc.citius.hipster.model.problem.SearchProblem;
 import org.apache.commons.logging.impl.SLF4JLog;
+
 import org.apache.maven.model.Build;
 import org.bimserver.emf.IfcModelInterface;
 import org.bimserver.emf.OfflineGeometryGenerator;
@@ -87,7 +88,7 @@ public class VertexExtractorIFC2x3
 
         FileWriter writer = null;
         try {
-            writer = new FileWriter("D:\\IFC_samples_log.txt",true);
+            writer = new FileWriter("/home/comcars2/logs/IFC_samples_log.txt",true);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -203,7 +204,7 @@ public class VertexExtractorIFC2x3
     public  void processLevelsSpacesGraph(IfcModelInterface model) {
         FileWriter writer = null;
         try {
-            writer = new FileWriter("F:\\workplace\\IFC_levels_processing_log_full.txt",false);
+            writer = new FileWriter("/home/comcars2/logs/IFC_levels_processing_log_full.txt",false);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -300,14 +301,14 @@ public class VertexExtractorIFC2x3
         //smartEvacSpaces
         System.out.println("drawing generated graph");
         GraphicsLibrary graphicsLibrary = new GraphicsLibrary();
-        graphicsLibrary.drawDoorsSpacesGraph("F:\\workplace\\graph_allspaces.png",smartEvacSpaces);
+        graphicsLibrary.drawDoorsSpacesGraph("/home/comcars2/logs/graph_allspaces.png",smartEvacSpaces);
         print_line.close();
     }
 
     private void generateExamplesSpaces(Map<String, SmartEvacSpace> smartEvacSpaces) {
         FileWriter writer = null;
         try {
-            writer = new FileWriter("F:\\workplace\\navigation_inside_bim_example.txt",true);
+            writer = new FileWriter("/home/comcars2/logs/navigation_inside_bim_example.txt",true);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -367,7 +368,7 @@ public class VertexExtractorIFC2x3
     public  void processLevels(IfcModelInterface model) {
         FileWriter writer = null;
         try {
-            writer = new FileWriter("D:\\workplace\\IFC_levels_processing_log.txt",true);
+            writer = new FileWriter("/home/comcars2/logs/IFC_levels_processing_log.txt",true);
         } catch (IOException e) {
             e.printStackTrace();
         }

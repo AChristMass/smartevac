@@ -1,13 +1,14 @@
 <component name="libraryTable">
   <library name="Maven: org.opensourcebim:BuildingSMARTLibrary:1.0.9">
     <CLASSES>
-      <root url="jar://$MAVEN_REPOSITORY$/org/opensourcebim/buildingsmartlibrary/1.0.9/BuildingSMARTLibrary-1.0.9.jar!/" />
+      <root url="jar://$MAVEN_REPOSITORY$/org/opensourcebim/BuildingSMARTLibrary/1.0.9/BuildingSMARTLibrary-1.0.9.jar!/" />
     </CLASSES>
     <JAVADOC>
       <root url="jar://$MAVEN_REPOSITORY$/org/opensourcebim/BuildingSMARTLibrary/1.0.9/BuildingSMARTLibrary-1.0.9-javadoc.jar!/" />
     </JAVADOC>
     <SOURCES>
       <root url="jar://$MAVEN_REPOSITORY$/org/opensourcebim/buildingsmartlibrary/1.0.9/BuildingSMARTLibrary-1.0.9-sources.jar!/" />
+      <root url="jar://$MAVEN_REPOSITORY$/org/opensourcebim/BuildingSMARTLibrary/1.0.9/BuildingSMARTLibrary-1.0.9-sources.jar!/" />
     </SOURCES>
   </library>
 </component>

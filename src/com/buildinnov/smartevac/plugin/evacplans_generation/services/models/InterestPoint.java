@@ -1,6 +1,6 @@
 package com.buildinnov.smartevac.plugin.evacplans_generation.services.models;
 
-import org.apache.commons.collections.bag.HashBag;
+
 import org.tinfour.common.Vertex;
 
 public class InterestPoint {

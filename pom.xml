@@ -137,11 +137,7 @@
       <artifactId>hipster-core</artifactId>
       <version>1.0.1</version>
     </dependency>
-    <dependency>
-      <groupId>es.usc.citius.hipster</groupId>
-      <artifactId>hipster-third-party-graphs</artifactId>
-      <version>1.0.1</version>
-    </dependency>
+
     <dependency>
       <groupId>com.google.guava</groupId>
       <artifactId>guava</artifactId>
@@ -185,7 +181,6 @@
       <version>4.7</version>
       <scope>test</scope>
     </dependency>
-
 
 
 
