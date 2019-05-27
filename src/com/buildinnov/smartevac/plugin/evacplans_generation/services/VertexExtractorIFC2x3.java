@@ -7,7 +7,6 @@ import es.usc.citius.hipster.graph.GraphSearchProblem;
 import es.usc.citius.hipster.graph.HipsterDirectedGraph;
 import es.usc.citius.hipster.model.problem.SearchProblem;
 import org.apache.commons.logging.impl.SLF4JLog;
-
 import org.apache.maven.model.Build;
 import org.bimserver.emf.IfcModelInterface;
 import org.bimserver.emf.OfflineGeometryGenerator;
@@ -88,7 +87,7 @@ public class VertexExtractorIFC2x3
 
         FileWriter writer = null;
         try {
-            writer = new FileWriter("/home/comcars2/logs/IFC_samples_log.txt",true);
+            writer = new FileWriter("D:\\IFC_samples_log.txt",true);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -199,12 +198,10 @@ public class VertexExtractorIFC2x3
         }
     }
 
-
-
     public  void processLevelsSpacesGraph(IfcModelInterface model) {
         FileWriter writer = null;
         try {
-            writer = new FileWriter("/home/comcars2/logs/IFC_levels_processing_log_full.txt",false);
+            writer = new FileWriter("F:\\workplace\\IFC_levels_processing_log_full.txt",false);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -266,31 +263,9 @@ public class VertexExtractorIFC2x3
                         print_line.printf("\nSpace stairs list size :  "+ifcStairs.size());
                         System.out.println("Finished the first part :");
                         //connecting goten doors to space
-                        for(IfcDoor  ifcDoor : spaceDoors ){
-                            if(alreadyCreatedSmartEvacDoors.containsKey(ifcDoor.getGlobalId()))
-                                smartEvacDoor = alreadyCreatedSmartEvacDoors.get(ifcDoor.getGlobalId());
-                            else {
-                                smartEvacDoor = new SmartEvacDoor(ifcDoor.getGlobalId(), space.getName()+":"+ifcDoor.getGlobalId());
-                                alreadyCreatedSmartEvacDoors.put(ifcDoor.getGlobalId(),smartEvacDoor);
-                            }
-                            smartEvacDoor.getAssociatedSpaces().add(smartEvacSpace);
-                            smartEvacSpace.getDoors().add(smartEvacDoor);
-                            spaceSmartEvacDoors.add(smartEvacDoor);
-                        }
+                        connectDoorsToSpace(space, spaceDoors, smartEvacSpace, spaceSmartEvacDoors);
                         //connecting goten stairs to space
-                        for(IfcStair ifcStair : ifcStairs){
-                            if(alreadyCreatedSmartEvacStairMap.containsKey(ifcStair.getGlobalId())) {
-                                smartEvacStair = alreadyCreatedSmartEvacStairMap.get(ifcStair.getGlobalId());
-                                smartEvacStair.setUpperLevelSpace(smartEvacSpace);
-                            }
-                            else {
-                                smartEvacStair = new SmartEvacStair(ifcStair.getGlobalId(), ifcStair.getName());
-                                smartEvacStair.setLowerLevelSpace(smartEvacSpace);
-                                alreadyCreatedSmartEvacStairMap.put(ifcStair.getGlobalId(),smartEvacStair);
-                            }
-                            smartEvacSpace.getStairs().add(smartEvacStair);
-                            spaceSmartEvacStairs.add(smartEvacStair);
-                        }
+                        ConnectStairsToSpace(smartEvacSpace, ifcStairs, spaceSmartEvacStairs);
                         this.smartEvacSpacesMap.put(space.getGlobalId(),smartEvacSpace);
                         ///generating space interest point
                         smartEvacSpaces.put(space.getGlobalId(),smartEvacSpace);
@@ -301,74 +276,30 @@ public class VertexExtractorIFC2x3
         //smartEvacSpaces
         System.out.println("drawing generated graph");
         GraphicsLibrary graphicsLibrary = new GraphicsLibrary();
-        graphicsLibrary.drawDoorsSpacesGraph("/home/comcars2/logs/graph_allspaces.png",smartEvacSpaces);
+        graphicsLibrary.drawDoorsSpacesGraph("F:\\workplace\\graph_allspaces.png",smartEvacSpaces);
         print_line.close();
     }
 
-    private void generateExamplesSpaces(Map<String, SmartEvacSpace> smartEvacSpaces) {
-        FileWriter writer = null;
-        try {
-            writer = new FileWriter("/home/comcars2/logs/navigation_inside_bim_example.txt",true);
-        } catch (IOException e) {
-            e.printStackTrace();
+    private void connectDoorsToSpace(IfcSpace space, List<IfcDoor> spaceDoors, SmartEvacSpace smartEvacSpace, List<SmartEvacDoor> spaceSmartEvacDoors) {
+        SmartEvacDoor smartEvacDoor;
+        for (IfcDoor ifcDoor : spaceDoors) {
+            if (alreadyCreatedSmartEvacDoors.containsKey(ifcDoor.getGlobalId()))
+                smartEvacDoor = alreadyCreatedSmartEvacDoors.get(ifcDoor.getGlobalId());
+            else {
+                smartEvacDoor = new SmartEvacDoor(ifcDoor.getGlobalId(), space.getName() + ":" + ifcDoor.getGlobalId());
+                alreadyCreatedSmartEvacDoors.put(ifcDoor.getGlobalId(), smartEvacDoor);
+            }
+            smartEvacDoor.getAssociatedSpaces().add(smartEvacSpace);
+            smartEvacSpace.getDoors().add(smartEvacDoor);
+            spaceSmartEvacDoors.add(smartEvacDoor);
         }
-        PrintWriter print_line = new PrintWriter(writer);
-
-
-        Iterator<Map.Entry<String, SmartEvacSpace>> spacesIterator = smartEvacSpaces.entrySet().iterator();
-        Map.Entry<String, SmartEvacSpace> entry;
-        SmartEvacSpace node;
-        Object o;
-        GraphBuilder<String, Double> graphBuilder = GraphBuilder.<String, Double>create();
-        HipsterDirectedGraph<String, Double> spacesGraph;
-        print_line.printf("\nCreating the navigation graph");
-        List<SmartEvacSpace> spacesId = new ArrayList<>();
-        while(spacesIterator.hasNext()){
-            entry = spacesIterator.next();
-            node = entry.getValue();
-            spacesId.add(node);
-            for(SmartEvacSpace space : node.getNeighbours())
-                graphBuilder.connect(node.getSpaceName()).to(space.getSpaceName()).withEdge(10.0);
-        }
-        spacesGraph = graphBuilder.createDirectedGraph();
-        System.out.println("Navigation graph created");
-        print_line.printf("\nNavigation graph created");
-        System.out.println("Exemple 01");
-        print_line.printf("\nExemple 01");
-        System.out.println("\nConnecting : "+spacesId.get(0).getSpaceName()+" to "+spacesId.get(spacesId.size()-1).getSpaceName());
-        print_line.printf("\nConnecting : "+spacesId.get(0).getSpaceName()+" to "+spacesId.get(spacesId.size()-1).getSpaceName());
-
-
-        SearchProblem p = GraphSearchProblem
-                .startingFrom(spacesId.get(0).getSpaceName())
-                .in(spacesGraph)
-                .takeCostsFromEdges()
-                .build();
-        print_line.printf("\nPrinting result");
-        System.out.println("\nPrinting result");
-        print_line.printf("\n"+Hipster.createDijkstra(p).search(spacesId.get(spacesId.size()-1).getSpaceName()));
-
-
-        print_line.printf("\nExemple 02");
-        System.out.println("\nConnecting : "+"1E22"+" to "+"1CC1");
-        print_line.printf("\nConnecting : 1E22 to 1CC1");
-        p = GraphSearchProblem
-                .startingFrom("1E22")
-                .in(spacesGraph)
-                .takeCostsFromEdges()
-                .build();
-        print_line.printf("\nPrinting result");
-        System.out.println("\nPrinting result");
-        print_line.printf("\n"+ Hipster.createDijkstra(p).search("1CC1"));
-        print_line.close();
-
     }
 
 
     public  void processLevels(IfcModelInterface model) {
         FileWriter writer = null;
         try {
-            writer = new FileWriter("/home/comcars2/logs/IFC_levels_processing_log.txt",true);
+            writer = new FileWriter("D:\\workplace\\IFC_levels_processing_log.txt",true);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -429,41 +360,10 @@ public class VertexExtractorIFC2x3
                         print_line.printf("\nGeeting space stairs :");
                         ifcStairs = getSpaceStairs(space,print_line);
                         print_line.printf("\nSpace stairs list size :  "+ifcStairs.size());
-                        System.out.println("Finished the first part :");
-                        /**
-                         *
-                         * Connecting goten doors and stairs to space
-                         *
-                         *In
-                         * */
-
-                        //connecting goten doors to space
-                        for(IfcDoor  ifcDoor : spaceDoors ){
-                            if(alreadyCreatedSmartEvacDoors.containsKey(ifcDoor.getGlobalId()))
-                                smartEvacDoor = alreadyCreatedSmartEvacDoors.get(ifcDoor.getGlobalId());
-                            else {
-                                smartEvacDoor = new SmartEvacDoor(ifcDoor.getGlobalId(), space.getName()+":"+ifcDoor.getGlobalId());
-                                alreadyCreatedSmartEvacDoors.put(ifcDoor.getGlobalId(),smartEvacDoor);
-
-                            }
-                            smartEvacDoor.getAssociatedSpaces().add(smartEvacSpace);
-                            smartEvacSpace.getDoors().add(smartEvacDoor);
-                            spaceSmartEvacDoors.add(smartEvacDoor);
-                        }
-                        //connecting goten stairs to space
-                        for(IfcStair ifcStair : ifcStairs){
-                            if(alreadyCreatedSmartEvacStairMap.containsKey(ifcStair.getGlobalId())) {
-                                smartEvacStair = alreadyCreatedSmartEvacStairMap.get(ifcStair.getGlobalId());
-                                smartEvacStair.setUpperLevelSpace(smartEvacSpace);
-                            }
-                            else {
-                                smartEvacStair = new SmartEvacStair(ifcStair.getGlobalId(), ifcStair.getName());
-                                smartEvacStair.setLowerLevelSpace(smartEvacSpace);
-                                alreadyCreatedSmartEvacStairMap.put(ifcStair.getGlobalId(),smartEvacStair);
-                            }
-                            smartEvacSpace.getStairs().add(smartEvacStair);
-                            spaceSmartEvacStairs.add(smartEvacStair);
-                        }
+                        //connecting goten doors to space ///Connect Doors to Space
+                        connectDoorsToSpace(space, spaceDoors, smartEvacSpace, spaceSmartEvacDoors);
+                        //connecting goten stairs to space  // Connect Stairs to space
+                        ConnectStairsToSpace(smartEvacSpace, ifcStairs, spaceSmartEvacStairs);
 
                         this.smartEvacSpacesMap.put(space.getGlobalId(),smartEvacSpace);
 
@@ -474,223 +374,95 @@ public class VertexExtractorIFC2x3
                          *
                          * **/
                         //connecting space's centroids to doors and stairs
-
-                        spaceTinInterestPoints = new ArrayList<>();
-                        for(int  l =0;l<spaceCentroids.size();l++) {
-                            interestPoint = new InterestPoint(space.getGlobalId()+"_cd_"+l,spaceCentroids.get(l), false);
-                            interestPoint.setType("Centroid");
-                            globalInterestPointsMap.put(interestPoint.getGlobalId(),interestPoint);
-                            spaceTinInterestPoints.add(interestPoint);
-                        }
-                        /**
-                         * Generating doorsInterestPoints
-                         * */
-                        doorsInterestPoints = new ArrayList<>();
-                        IfcDoor ifcDoor;
-                        for(int m=0;m<spaceSmartEvacDoors.size();m++){
-                            ifcDoor = doorsMap.get(spaceSmartEvacDoors.get(m).getDoorGlobalId());
-                            if(ifcDoor !=null)
-                                interestPoint = new InterestPoint(getDoorPosition(ifcDoor),true);
-                            else
-                                interestPoint = new InterestPoint(null,true);
-                            interestPoint.setAssociatedElement(spaceSmartEvacDoors.get(m));
-                            interestPoint.setType("IfcDoor");
-                            //graphBuilder.connect(spaceTinInterestPoints.get(l)).to(interestPoint).withEdge(new IndoorDistance(spaceTinInterestPoints.get(m).getVertex(),null));
-                            doorsInterestPoints.add(interestPoint);
-                            interestPoint.setGlobalId(spaceSmartEvacDoors.get(m).getDoorGlobalId());
-                        }
-                        stairsInterestPoints = new ArrayList<>();
-                        for(int m=0;m<spaceSmartEvacStairs.size();m++){
-                            interestPoint = new InterestPoint(null,true);
-                            interestPoint.setAssociatedElement(spaceSmartEvacStairs.get(m));
-                            interestPoint.setType("IfcStair");
-                            //graphBuilder.connect(spaceTinInterestPoints.get(l)).to(interestPoint).withEdge(new IndoorDistance(spaceTinInterestPoints.get(m).getVertex(),null));
-                            stairsInterestPoints.add(interestPoint);
-                            interestPoint.setGlobalId(spaceSmartEvacStairs.get(m).getStairGlobalId());
-                        }
-                        /*
-                        for(int l=0;l<spaceTinInterestPoints.size();l++) {
-                            if(!doneInterestPoints.contains(spaceTinInterestPoints.get(l).getGlobalId())) {
-                                //connecting centroids
-                                spaceTinOtherInterestPoints = new ArrayList<>();
-                                for (int m = 0; m < spaceTinInterestPoints.size(); m++) {
-                                    concatTwoGID = doneInterestPoints.contains(spaceTinInterestPoints.get(l).getGlobalId().concat(spaceTinInterestPoints.get(m).getGlobalId()))
-                                            || doneInterestPoints.contains(spaceTinInterestPoints.get(m).getGlobalId().concat(spaceTinInterestPoints.get(l).getGlobalId()));
-                                    if (l != m && !concatTwoGID) {
-                                        doneInterestPoints.add(spaceTinInterestPoints.get(l).getGlobalId().concat(spaceTinInterestPoints.get(m).getGlobalId()));
-                                        spaceTinOtherInterestPoints.add(spaceTinInterestPoints.get(m));
-                                        //graphBuilder.connect(spaceTinInterestPoints.get(l)).to(spaceTinInterestPoints.get(m)).withEdge(new IndoorDistance(spaceTinInterestPoints.get(l).getVertex(), spaceTinInterestPoints.get(m).getVertex()));
-                                    }
-                                }
+                        spaceTinInterestPoints = createInterestPointsFromSpaceCentroids(space, spaceCentroids);
+                        doorsInterestPoints    = CreateInterestPointsFromSpaceDoors(spaceSmartEvacDoors);
+                        stairsInterestPoints   = CreateInterestPointsFromSpaceStairs(spaceSmartEvacStairs);
 
 
+                        //TODO implement connecting centroids method
+                        //TODO implement connecting centroid to space doors
+                            //TODO find the nearest centroid to each space's door and connect it
+                        //TODO implement connecting centroids to space stairs
+                            //TODO find the nearest centroid to each space's stair and connect it
+                        //TODO connect stair to door (if possible)
 
-                                if (!indoorNavigationNetworkMap.containsKey(spaceTinInterestPoints.get(l).getGlobalId())) {
-                                    //System.out.println("Centroid  doesn't exist");
-                                    indoorNavigationNetworkMap.put(spaceTinInterestPoints.get(l).getGlobalId(), spaceTinOtherInterestPoints);
-
-                                } else {
-                                    //System.out.println("Centroid already exist");
-                                    indoorNavigationNetworkMap.get(spaceTinInterestPoints.get(l).getGlobalId()).addAll(spaceTinOtherInterestPoints);
-                                }
-
-                                doneInterestPoints.add(spaceTinInterestPoints.get(l).getGlobalId());
-
-                            }
-
-
-
-                            //connecting centroids to space doors
-                            //centroid not added before
-                            if(!indoorNavigationNetworkMap.containsKey(spaceTinInterestPoints.get(l).getGlobalId()))   {
-                                //System.out.println("indoorNavigationNetworkMap dont contains");
-                                indoorNavigationNetworkMap.put(spaceTinInterestPoints.get(l).getGlobalId(),  doorsInterestPoints );
-                                indoorNavigationNetworkMap.put(spaceTinInterestPoints.get(l).getGlobalId(),  stairsInterestPoints );
-                            }
-                            else{
-                                //Centroid already existe
-                                //System.out.println("Centroid Interest Point already exist");
-
-                                interestPoints = indoorNavigationNetworkMap.get(spaceTinInterestPoints.get(l).getGlobalId());
-                                temp = doorsInterestPoints;
-                                for(InterestPoint point : temp){
-                                    if(! interestPoints.contains(point))
-                                        indoorNavigationNetworkMap.get(spaceTinInterestPoints.get(l).getGlobalId()).add(point);
-
-
-                                    if( ! indoorNavigationNetworkMap.containsKey(point.getGlobalId())){
-                                        interestPoints = new ArrayList<>();
-                                        interestPoints.addAll(spaceTinInterestPoints);
-                                        indoorNavigationNetworkMap.put(point.getGlobalId(),interestPoints);
-                                    }else{
-                                        for(InterestPoint pointCentroid : spaceTinInterestPoints)
-                                            if( !indoorNavigationNetworkMap.get(point.getGlobalId()).contains(pointCentroid) )
-                                                indoorNavigationNetworkMap.get(point.getGlobalId()).add(pointCentroid);
-                                            else {
-                                                indexO = indoorNavigationNetworkMap.get(point.getGlobalId()).indexOf(pointCentroid);
-                                                pp = indoorNavigationNetworkMap.get(point.getGlobalId()).get(indexO);
-                                                //System.out.println("Door map already contains point diff DoorPGID  : " +pointCentroid.getGlobalId()+" centroid GID :"+pp.getGlobalId());
-                                                //print_line.printf("\nDoor map already contains point diff DoorPGID  : " +pointCentroid.getGlobalId()+" centroid GID :"+pp.getGlobalId());
-                                            }
-                                    }
-                                    //if(! globalInterestPointsMap.containsKey(interestPoint.getGlobalId()))
-                                     //   globalInterestPointsMap.put(interestPoint.getGlobalId(),interestPoint);
-
-                                }
-                                temp = stairsInterestPoints;
-                                for(InterestPoint point : temp){
-                                    if(! interestPoints.contains(point))
-                                        indoorNavigationNetworkMap.get(spaceTinInterestPoints.get(l).getGlobalId()).add(point);
-
-
-                                    if( ! indoorNavigationNetworkMap.containsKey(point.getGlobalId())){
-                                        interestPoints = new ArrayList<>();
-                                        interestPoints.addAll(spaceTinInterestPoints);
-                                        indoorNavigationNetworkMap.put(point.getGlobalId(),interestPoints);
-                                    }else{
-                                        for(InterestPoint pointCentroid : spaceTinInterestPoints)
-                                            if( !indoorNavigationNetworkMap.get(point.getGlobalId()).contains(pointCentroid) )
-                                                indoorNavigationNetworkMap.get(point.getGlobalId()).add(pointCentroid);
-                                            else {
-                                                indexO = indoorNavigationNetworkMap.get(point.getGlobalId()).indexOf(pointCentroid);
-                                                pp = indoorNavigationNetworkMap.get(point.getGlobalId()).get(indexO);
-                                                //System.out.println("Door map already contains point diff StairPGID  : " +pointCentroid.getGlobalId()+" centroid GID :"+pp.getGlobalId());
-                                                //print_line.printf("\nDoor map already contains point diff StairPGID  : " +pointCentroid.getGlobalId()+" centroid GID :"+pp.getGlobalId());
-                                            }
-                                    }
-                                    //if(! globalInterestPointsMap.containsKey(interestPoint.getGlobalId()))
-                                    //   globalInterestPointsMap.put(interestPoint.getGlobalId(),interestPoint);
-                                }
-
-                            }
-
-
-
-                            //connecting centroids to space stairs
-                            if(!indoorNavigationNetworkMap.containsKey(spaceTinInterestPoints.get(l).getGlobalId()))   {
-                                indoorNavigationNetworkMap.put(spaceTinInterestPoints.get(l).getGlobalId(),  stairsInterestPoints );
-                            }
-                            else{
-                                interestPoints = indoorNavigationNetworkMap.get(spaceTinInterestPoints.get(l).getGlobalId());
-                                for(InterestPoint point : stairsInterestPoints)
-                                    if(! interestPoints.contains(point))
-                                        indoorNavigationNetworkMap.get(spaceTinInterestPoints.get(l).getGlobalId()).add(point);
-
-                            }
-                        }
-                        */
-                        //connecting stairs to doors
-                        /*
-                        for(int l=0;l<doorsInterestPoints.size();l++){
-
-                            if(! globalInterestPointsMap.containsKey(doorsInterestPoints.get(l).getGlobalId()))
-                                globalInterestPointsMap.put(doorsInterestPoints.get(l).getGlobalId(),doorsInterestPoints.get(l));
-
-
-                            for(int m=0;m<stairsInterestPoints.size();m++){
-                                if(! globalInterestPointsMap.containsKey(stairsInterestPoints.get(m).getGlobalId()))
-                                    globalInterestPointsMap.put(stairsInterestPoints.get(m).getGlobalId(),stairsInterestPoints.get(m));
-                                if( ! indoorNavigationNetworkMap.containsKey(stairsInterestPoints.get(m).getGlobalId())){
-                                    interestPoints = new ArrayList<>();
-                                    interestPoints.add(doorsInterestPoints.get(l));
-                                    indoorNavigationNetworkMap.put(stairsInterestPoints.get(m).getGlobalId(),interestPoints);
-                                }else{
-                                    indoorNavigationNetworkMap.get(stairsInterestPoints.get(m).getGlobalId()).add(doorsInterestPoints.get(l));
-                                }
-
-
-                                if( ! indoorNavigationNetworkMap.containsKey(doorsInterestPoints.get(l).getGlobalId())){
-                                    interestPoints = new ArrayList<>();
-                                    interestPoints.add(stairsInterestPoints.get(m));
-                                    indoorNavigationNetworkMap.put(doorsInterestPoints.get(l).getGlobalId(),interestPoints);
-                                }else{
-                                    indoorNavigationNetworkMap.get(doorsInterestPoints.get(l).getGlobalId()).add(stairsInterestPoints.get(m));
-                                }
-
-                                //indoorNavigationNetworkMap.put(doorsInterestPoints.get(l).getGlobalId(),)
-                                //graphBuilder.connect(doorsInterestPoints.get(l)).to( stairsInterestPoints.get(m) ).withEdge(new IndoorDistance( null,null)  );
-                            }
-
-                            //System.out.println("Finished the second part :");
-                        }
-                           */
                         ///generating space interest point
                         smartEvacSpaces.put(space.getGlobalId(),smartEvacSpace);
-
-
-
-
-                        //alreadyCreatedSmartEvacStairMap.put()
-                        //indoorNavigationNetwork
-                        //getting space neibourhood relationship with other spaces
-                        //from gotten doors we find the neighbour space by testing if the door is a part of it's boundaries
-                        //list of neighbours
-                        //The neighbourhood of a space will be deduct using the last code, so when we want to get
-                        // this we get all the space's doors and from each of these door we get the associed spaces's list
-                        //find also if the space contains a stair to access to other level
-                        //if it does so it will be contained in the two spaces,  we have to get the other space, it's building storey (in wich level it is)
-                        //A point if interest could be : a space (compound point of interest), a door,
-                        // a centroid of TIN triangle of a space or a stair
-                        /*
                         System.out.println("drawing generated graph");
                         GraphicsLibrary graphicsLibrary = new GraphicsLibrary();
                         graphicsLibrary.drawGraph("D:\\workplace\\"+space.getName()+"_"+space.getGlobalId()+"graph_onespace.png",indoorNavigationNetworkMap,globalInterestPointsMap);
                         indoorNavigationNetworkMap = new HashMap<>();
                         globalInterestPointsMap = new HashMap<>();
-                        */
-
                     }
                 }
             }
         }
-        //smartEvacSpaces
-        /*
-        System.out.println("drawing generated graph");
-        GraphicsLibrary graphicsLibrary = new GraphicsLibrary();
-        graphicsLibrary.drawDoorsSpacesGraph("D:\\workplace\\graph_allspaces.png",smartEvacSpaces);
-        */
         print_line.close();
 
+    }
+
+    private List<InterestPoint> CreateInterestPointsFromSpaceStairs(List<SmartEvacStair> spaceSmartEvacStairs) {
+        List<InterestPoint> stairsInterestPoints;
+        InterestPoint interestPoint;
+        stairsInterestPoints = new ArrayList<>();
+        for(int m=0;m<spaceSmartEvacStairs.size();m++){
+            interestPoint = new InterestPoint(null,true);
+            interestPoint.setAssociatedElement(spaceSmartEvacStairs.get(m));
+            interestPoint.setType("IfcStair");
+            //graphBuilder.connect(spaceTinInterestPoints.get(l)).to(interestPoint).withEdge(new IndoorDistance(spaceTinInterestPoints.get(m).getVertex(),null));
+            stairsInterestPoints.add(interestPoint);
+            interestPoint.setGlobalId(spaceSmartEvacStairs.get(m).getStairGlobalId());
+        }
+        return stairsInterestPoints;
+    }
+
+    private List<InterestPoint> CreateInterestPointsFromSpaceDoors(List<SmartEvacDoor> spaceSmartEvacDoors) {
+        List<InterestPoint> doorsInterestPoints;
+        InterestPoint interestPoint;
+        doorsInterestPoints = new ArrayList<>();
+        IfcDoor ifcDoor;
+        for(int m=0;m<spaceSmartEvacDoors.size();m++){
+            ifcDoor = doorsMap.get(spaceSmartEvacDoors.get(m).getDoorGlobalId());
+            if(ifcDoor !=null)
+                interestPoint = new InterestPoint(getDoorPosition(ifcDoor),true);
+            else
+                interestPoint = new InterestPoint(null,true);
+            interestPoint.setAssociatedElement(spaceSmartEvacDoors.get(m));
+            interestPoint.setType("IfcDoor");
+            //graphBuilder.connect(spaceTinInterestPoints.get(l)).to(interestPoint).withEdge(new IndoorDistance(spaceTinInterestPoints.get(m).getVertex(),null));
+            doorsInterestPoints.add(interestPoint);
+            interestPoint.setGlobalId(spaceSmartEvacDoors.get(m).getDoorGlobalId());
+        }
+        return doorsInterestPoints;
+    }
+
+    private List<InterestPoint> createInterestPointsFromSpaceCentroids(IfcSpace space, List<Vertex> spaceCentroids) {
+        List<InterestPoint> spaceTinInterestPoints;
+        InterestPoint interestPoint;
+        spaceTinInterestPoints = new ArrayList<>();
+        for(int  l =0;l<spaceCentroids.size();l++) {
+            interestPoint = new InterestPoint(space.getGlobalId()+"_cd_"+l,spaceCentroids.get(l), false);
+            interestPoint.setType("Centroid");
+            globalInterestPointsMap.put(interestPoint.getGlobalId(),interestPoint);
+            spaceTinInterestPoints.add(interestPoint);
+        }
+        return spaceTinInterestPoints;
+    }
+
+    private void ConnectStairsToSpace(SmartEvacSpace smartEvacSpace, List<IfcStair> ifcStairs, List<SmartEvacStair> spaceSmartEvacStairs) {
+        SmartEvacStair smartEvacStair;
+        for (IfcStair ifcStair : ifcStairs) {
+            if (alreadyCreatedSmartEvacStairMap.containsKey(ifcStair.getGlobalId())) {
+                smartEvacStair = alreadyCreatedSmartEvacStairMap.get(ifcStair.getGlobalId());
+                smartEvacStair.setUpperLevelSpace(smartEvacSpace);
+            } else {
+                smartEvacStair = new SmartEvacStair(ifcStair.getGlobalId(), ifcStair.getName());
+                smartEvacStair.setLowerLevelSpace(smartEvacSpace);
+                alreadyCreatedSmartEvacStairMap.put(ifcStair.getGlobalId(), smartEvacStair);
+            }
+            smartEvacSpace.getStairs().add(smartEvacStair);
+            spaceSmartEvacStairs.add(smartEvacStair);
+        }
     }
 
 
@@ -702,6 +474,67 @@ public class VertexExtractorIFC2x3
                     smartEvacSpaces.add(evacSpace);
         return smartEvacSpaces;
     }
+
+
+    private void generateExamplesSpaces(Map<String, SmartEvacSpace> smartEvacSpaces) {
+        FileWriter writer = null;
+        try {
+            writer = new FileWriter("F:\\workplace\\navigation_inside_bim_example.txt",true);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        PrintWriter print_line = new PrintWriter(writer);
+
+
+        Iterator<Map.Entry<String, SmartEvacSpace>> spacesIterator = smartEvacSpaces.entrySet().iterator();
+        Map.Entry<String, SmartEvacSpace> entry;
+        SmartEvacSpace node;
+        Object o;
+        GraphBuilder<String, Double> graphBuilder = GraphBuilder.<String, Double>create();
+        HipsterDirectedGraph<String, Double> spacesGraph;
+        print_line.printf("\nCreating the navigation graph");
+        List<SmartEvacSpace> spacesId = new ArrayList<>();
+        while(spacesIterator.hasNext()){
+            entry = spacesIterator.next();
+            node = entry.getValue();
+            spacesId.add(node);
+            for(SmartEvacSpace space : node.getNeighbours())
+                graphBuilder.connect(node.getSpaceName()).to(space.getSpaceName()).withEdge(10.0);
+        }
+        spacesGraph = graphBuilder.createDirectedGraph();
+        System.out.println("Navigation graph created");
+        print_line.printf("\nNavigation graph created");
+        System.out.println("Exemple 01");
+        print_line.printf("\nExemple 01");
+        System.out.println("\nConnecting : "+spacesId.get(0).getSpaceName()+" to "+spacesId.get(spacesId.size()-1).getSpaceName());
+        print_line.printf("\nConnecting : "+spacesId.get(0).getSpaceName()+" to "+spacesId.get(spacesId.size()-1).getSpaceName());
+
+
+        SearchProblem p = GraphSearchProblem
+                .startingFrom(spacesId.get(0).getSpaceName())
+                .in(spacesGraph)
+                .takeCostsFromEdges()
+                .build();
+        print_line.printf("\nPrinting result");
+        System.out.println("\nPrinting result");
+        print_line.printf("\n"+Hipster.createDijkstra(p).search(spacesId.get(spacesId.size()-1).getSpaceName()));
+
+
+        print_line.printf("\nExemple 02");
+        System.out.println("\nConnecting : "+"1E22"+" to "+"1CC1");
+        print_line.printf("\nConnecting : 1E22 to 1CC1");
+        p = GraphSearchProblem
+                .startingFrom("1E22")
+                .in(spacesGraph)
+                .takeCostsFromEdges()
+                .build();
+        print_line.printf("\nPrinting result");
+        System.out.println("\nPrinting result");
+        print_line.printf("\n"+ Hipster.createDijkstra(p).search("1CC1"));
+        print_line.close();
+
+    }
+
 
 
 
